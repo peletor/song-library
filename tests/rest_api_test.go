@@ -12,8 +12,8 @@ func TestSongSave_HappyPath(t *testing.T) {
 
 	e.POST("/songs").
 		WithJSON(models.Song{
-			Group: gofakeit.AppAuthor(),
-			Song:  gofakeit.BookTitle(),
+			GroupName: gofakeit.AppAuthor(),
+			SongName:  gofakeit.BookTitle(),
 		}).
 		Expect().Status(201)
 }
@@ -26,14 +26,14 @@ func TestSongSave(t *testing.T) {
 		status int
 	}{
 		{
-			name:   "Empty Group",
+			name:   "Empty GroupName",
 			group:  "",
-			song:   "Song",
+			song:   "SongName",
 			status: http.StatusBadRequest,
 		},
 		{
-			name:   "Empty Song",
-			group:  "Group",
+			name:   "Empty SongName",
+			group:  "GroupName",
 			song:   "",
 			status: http.StatusBadRequest,
 		},
@@ -46,8 +46,8 @@ func TestSongSave(t *testing.T) {
 
 			e.POST("/songs").
 				WithJSON(models.Song{
-					Group: tc.group,
-					Song:  tc.song,
+					GroupName: tc.group,
+					SongName:  tc.song,
 				}).
 				Expect().Status(tc.status)
 		})
@@ -62,8 +62,8 @@ func TestSongInfo_HappyPath(t *testing.T) {
 
 	e.POST("/songs").
 		WithJSON(models.Song{
-			Group: group,
-			Song:  song,
+			GroupName: group,
+			SongName:  song,
 		}).
 		Expect().Status(201)
 
@@ -75,4 +75,39 @@ func TestSongInfo_HappyPath(t *testing.T) {
 		ContainsKey("releaseDate").
 		ContainsKey("text").
 		ContainsKey("link")
+}
+
+func TestSongDelete_HappyPath(t *testing.T) {
+	e := httpExpect(t)
+
+	group := gofakeit.AppAuthor()
+	song := gofakeit.BookTitle()
+
+	e.POST("/songs").
+		WithJSON(models.Song{
+			GroupName: group,
+			SongName:  song,
+		}).
+		Expect().Status(201)
+
+	e.DELETE("/songs").
+		WithJSON(models.Song{
+			GroupName: group,
+			SongName:  song,
+		}).
+		Expect().Status(200)
+}
+
+func TestSongDelete_NotFound(t *testing.T) {
+	e := httpExpect(t)
+
+	group := gofakeit.AppAuthor()
+	song := gofakeit.BookTitle()
+
+	e.DELETE("/songs").
+		WithJSON(models.Song{
+			GroupName: group,
+			SongName:  song,
+		}).
+		Expect().Status(204)
 }

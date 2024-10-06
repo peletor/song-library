@@ -1,8 +1,8 @@
 package models
 
 type Song struct {
-	Group string `json:"group" validate:"required"`
-	Song  string `json:"song" validate:"required"`
+	GroupName string `json:"group" validate:"required"`
+	SongName  string `json:"song" validate:"required"`
 }
 
 type SongDetail struct {

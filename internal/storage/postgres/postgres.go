@@ -198,3 +198,38 @@ func (s *Storage) SongUpdate(groupName string, songName string, songDetail model
 
 	return nil
 }
+
+func (s *Storage) DeleteSong(groupName string, songName string) (songID int, err error) {
+	const op = "storage.postgres.DeleteSong"
+
+	sqlStr := `
+  			DELETE FROM songs
+			WHERE name = ($1)
+  			    AND group_id IN (SELECT id FROM groups WHERE name = ($2))
+  			RETURNING id`
+
+	err = s.db.QueryRow(sqlStr, songName, groupName).Scan(&songID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, storage.ErrSongNotFound
+		}
+
+		return 0, fmt.Errorf("%s: failed to delete song: %w", op, err)
+	}
+
+	// Song was successfully deleted
+
+	// Try to delete group
+
+	sqlStr = `
+		DELETE FROM groups
+  		WHERE name = ($1)`
+
+	// If there are other songs by this group,
+	// then Exec() will return a not-nil error
+	// and the group will not be deleted.
+
+	_, _ = s.db.Exec(sqlStr, groupName)
+
+	return songID, nil
+}

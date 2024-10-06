@@ -1,0 +1,58 @@
+# curl -X 'DELETE'
+#  'http://localhost:8080/songs'
+#  -H 'accept: */*'
+#  -H 'Content-Type: application/json'
+#  -d '{
+#  "group": "Muse",
+#  "song": "Supermassive Black Hole"
+#}'
+DELETE http://localhost:8080/songs
+accept: */*
+Content-Type: application/json
+
+{
+  "group": "Muse",
+  "song": "Supermassive Black Hole"
+}
+
+###
+
+# curl -X 'DELETE'
+#  'http://localhost:8080/songs'
+#  -H 'accept: */*'
+#  -H 'Content-Type: application/json'
+#  -d '{
+#  "group": "Enya",
+#  "song": "Only time"
+#}'
+DELETE http://localhost:8080/songs
+accept: */*
+Content-Type: application/json
+
+{
+  "group": "Enya",
+  "song": "Only time"
+}
+
+###
+
+# Wrong data
+
+# curl -X 'DELETE'
+#  'http://localhost:8080/songs'
+#  -H 'accept: */*'
+#  -H 'Content-Type: application/json'
+#  -d '{
+#  "group": "Wrong group",
+#  "song": "Wrong song"
+#}'
+DELETE http://localhost:8080/songs
+accept: */*
+Content-Type: application/json
+
+{
+  "group": "Wrong group",
+  "song": ""
+}
+
+###

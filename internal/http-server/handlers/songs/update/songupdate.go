@@ -12,9 +12,7 @@ import (
 
 type Request struct {
 	models.Song
-	//	Group      string `json:"group" validate:"required"`
-	//	Song       string `json:"song" validate:"required"`
-	SongDetail models.SongDetail
+	SongDetail models.SongDetail `json:"songDetail" validate:"required"`
 }
 
 type SongUpdater interface {
@@ -29,6 +27,7 @@ func New(log *slog.Logger, songUpdater SongUpdater) http.HandlerFunc {
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
+
 		var req Request
 
 		err := render.DecodeJSON(r.Body, &req)
@@ -40,7 +39,7 @@ func New(log *slog.Logger, songUpdater SongUpdater) http.HandlerFunc {
 			return
 		}
 
-		if req.Group == "" || req.Song.Song == "" {
+		if req.GroupName == "" || req.SongName == "" {
 			w.WriteHeader(http.StatusBadRequest)
 
 			return
@@ -48,12 +47,12 @@ func New(log *slog.Logger, songUpdater SongUpdater) http.HandlerFunc {
 
 		log.Info("Request body decoded", slog.Any("request", req))
 
-		err = songUpdater.SongUpdate(req.Group, req.Song.Song, req.SongDetail)
+		err = songUpdater.SongUpdate(req.GroupName, req.SongName, req.SongDetail)
 		if err != nil {
 			if errors.Is(err, storage.ErrSongNotFound) {
-				log.Info("Song not found",
-					slog.String("group", req.Group),
-					slog.String("song", req.Song.Song))
+				log.Info("SongName not found",
+					slog.String("group", req.GroupName),
+					slog.String("song", req.SongName))
 
 				w.WriteHeader(http.StatusNotFound)
 
@@ -68,9 +67,9 @@ func New(log *slog.Logger, songUpdater SongUpdater) http.HandlerFunc {
 
 		}
 
-		log.Info("Song successfully updated",
-			slog.String("group", req.Group),
-			slog.String("song", req.Song.Song),
+		log.Info("SongName successfully updated",
+			slog.String("group", req.GroupName),
+			slog.String("song", req.SongName),
 		)
 
 		w.WriteHeader(http.StatusOK)

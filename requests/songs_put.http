@@ -62,3 +62,16 @@ Content-Type: application/json
 }
 
 ###
+
+# Without songDetail
+
+PUT http://localhost:8080/songs
+accept: */*
+Content-Type: application/json
+
+{
+  "group": "Muse",
+  "song": "Supermassive Black Hole"
+}
+
+###

@@ -1,4 +1,4 @@
-package songsave
+package songdelete
 
 import (
 	"errors"
@@ -10,13 +10,13 @@ import (
 	"song-library/internal/storage"
 )
 
-type SongSaver interface {
-	SaveSong(groupName string, songName string) (songId int, err error)
+type SongDeleter interface {
+	DeleteSong(groupName string, songName string) (songId int, err error)
 }
 
-func New(log *slog.Logger, songSaver SongSaver) http.HandlerFunc {
+func New(log *slog.Logger, songDeleter SongDeleter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.songs.save"
+		const op = "handlers.songs.delete"
 
 		log = log.With(
 			slog.String("op", op),
@@ -37,7 +37,7 @@ func New(log *slog.Logger, songSaver SongSaver) http.HandlerFunc {
 		log.Info("Request body decoded", slog.Any("request", req))
 
 		if req.GroupName == "" || req.SongName == "" {
-			log.Info("Cannot save song, group or song name is missing",
+			log.Info("Cannot delete song, group or song name is missing",
 				slog.String("song", req.SongName),
 				slog.String("group", req.GroupName))
 
@@ -46,31 +46,31 @@ func New(log *slog.Logger, songSaver SongSaver) http.HandlerFunc {
 			return
 		}
 
-		songId, err := songSaver.SaveSong(req.GroupName, req.SongName)
+		songId, err := songDeleter.DeleteSong(req.GroupName, req.SongName)
 		if err != nil {
-			if errors.Is(err, storage.ErrSongExists) {
-				log.Info("SongName already exists",
+			if errors.Is(err, storage.ErrSongNotFound) {
+				log.Info("SongName not found",
 					slog.String("song", req.SongName),
 					slog.String("group", req.GroupName))
 
-				w.WriteHeader(http.StatusAlreadyReported)
+				w.WriteHeader(http.StatusNoContent)
 
 				return
 			}
 
-			log.Error("Failed to save song", slog.Any("error", err))
+			log.Error("Failed to delete song", slog.Any("error", err))
 
 			w.WriteHeader(http.StatusInternalServerError)
 
 			return
 		}
 
-		log.Info("SongName successfully saved",
+		log.Info("SongName successfully deleted",
 			slog.String("group", req.GroupName),
 			slog.String("song", req.SongName),
 			slog.Int("song_id", songId),
 		)
 
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 	}
 }

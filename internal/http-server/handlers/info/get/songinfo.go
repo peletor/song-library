@@ -38,7 +38,7 @@ func New(log *slog.Logger, songInformer SongInformer) http.HandlerFunc {
 		songDetail, err := songInformer.SongInfo(groupName, songName)
 		if err != nil {
 			if errors.Is(err, storage.ErrSongNotFound) {
-				log.Info("Song not found",
+				log.Info("SongName not found",
 					slog.String("group", groupName),
 					slog.String("song", songName))
 
