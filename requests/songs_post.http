@@ -1,0 +1,56 @@
+# curl -X 'POST'
+#  'http://localhost:8080/songs'
+#  -H 'accept: */*'
+#  -H 'Content-Type: application/json'
+#  -d '{
+#  "group": "Muse",
+#  "song": "Supermassive Black Hole"
+#}'
+POST http://localhost:8080/songs
+accept: */*
+Content-Type: application/json
+
+{
+  "group": "Muse",
+  "song": "Supermassive Black Hole"
+}
+
+###
+
+# curl -X 'POST'
+#  'http://localhost:8080/songs'
+#  -H 'accept: */*'
+#  -H 'Content-Type: application/json'
+#  -d '{
+#  "group": "Enya",
+#  "song": "Only time"
+#}'
+POST http://localhost:8080/songs
+accept: */*
+Content-Type: application/json
+
+{
+  "group": "Enya",
+  "song": "Only time"
+}
+
+###
+
+# curl -X 'POST'
+#  'http://localhost:8080/songs'
+#  -H 'accept: */*'
+#  -H 'Content-Type: application/json'
+#  -d '{
+#  "group": "Muse",
+#  "song": "Supermassive 2"
+#}'
+POST http://localhost:8080/songs
+accept: */*
+Content-Type: application/json
+
+{
+  "group": "Muse",
+  "song": "Supermassive 2"
+}
+
+###

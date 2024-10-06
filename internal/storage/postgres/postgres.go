@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	_ "github.com/lib/pq"
 	"log/slog"
 	"song-library/internal/config"
+	"song-library/internal/storage"
 )
 
 type Storage struct {
@@ -62,4 +64,62 @@ func (s *Storage) Close(log *slog.Logger) {
 	} else {
 		log.Debug("Database connection was successfully closed")
 	}
+}
+
+func (s *Storage) SaveSong(groupName string, songName string) (songID int, err error) {
+	const op = "storage.postgres.SaveSong"
+
+	groupID, err := s.getGroupID(groupName)
+	if err != nil {
+		return 0, fmt.Errorf("%s: failed to get group id: %w", op, err)
+	}
+
+	sqlStr := `INSERT INTO songs (name, group_id) 
+				VALUES ($1, $2) 
+				RETURNING id`
+	err = s.db.QueryRow(sqlStr,
+		songName, groupID).Scan(&songID)
+	if err != nil {
+		return 0, fmt.Errorf("%s: failed to add new song: %w", op, err)
+	}
+	return songID, nil
+}
+
+// findGroupID find the group ID based on the group name.
+func (s *Storage) findGroupID(groupName string) (groupID int, err error) {
+	sqlStr := `SELECT id 
+				FROM groups 
+				WHERE name = ($1)`
+
+	err = s.db.QueryRow(sqlStr, groupName).Scan(&groupID)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return 0, storage.ErrGroupNotFound
+	}
+	return groupID, err
+}
+
+// getGroupID get the group ID based on the group name.
+// If the group name is not already in the database, a new record will be added.
+func (s *Storage) getGroupID(groupName string) (groupID int, err error) {
+	const op = "storage.postgres.getGroupID"
+
+	groupID, err = s.findGroupID(groupName)
+	if err != nil {
+		if errors.Is(err, storage.ErrGroupNotFound) {
+			sqlStr := `INSERT INTO groups (name) 
+						VALUES ($1)
+						RETURNING id`
+			err = s.db.QueryRow(sqlStr, groupName).Scan(&groupID)
+			if err != nil {
+				return 0, fmt.Errorf("%s: failed to add new group: %s. Err: %w", op, groupName, err)
+			}
+
+			return groupID, nil
+
+		} else {
+			return 0, fmt.Errorf("%s: failed to find group: %s. Err: %w", op, groupName, err)
+		}
+	}
+
+	return groupID, nil
 }
