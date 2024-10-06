@@ -48,3 +48,18 @@ func New(cfg *config.Config, logger *slog.Logger) (*Storage, error) {
 
 	return pgStorage, nil
 }
+
+func (s *Storage) Close(log *slog.Logger) {
+	const op = "storage.postgres.Close"
+
+	log = log.With(slog.String("op", op))
+
+	log.Debug("Starting close database connection")
+
+	err := s.db.Close()
+	if err != nil {
+		log.Error("Unable to close database connection", slog.Any("error", err))
+	} else {
+		log.Debug("Database connection was successfully closed")
+	}
+}

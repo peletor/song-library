@@ -1,14 +1,18 @@
 package main
 
 import (
+	"context"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
 	"song-library/internal/config"
 	"song-library/internal/http-server/mwlogger"
 	"song-library/internal/logger"
 	"song-library/internal/storage/postgres"
+	"syscall"
 )
 
 func main() {
@@ -42,4 +46,41 @@ func main() {
 	router.Use(mwlogger.New(log))
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
+
+	// Paths
+
+	// Channel to graceful shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
+	// Server
+	log.Info("Start server", slog.String("Address", cfg.Address))
+
+	server := &http.Server{
+		Addr:         cfg.Address,
+		Handler:      router,
+		ReadTimeout:  cfg.Timeout,
+		WriteTimeout: cfg.Timeout,
+		IdleTimeout:  cfg.IdleTimeout,
+	}
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			log.Info("Server is not running", slog.Any("reason", err))
+			stop <- syscall.SIGINT
+		}
+	}()
+
+	// Graceful shutdown
+	sign := <-stop
+
+	log.Info("Stopping server", slog.String("signal", sign.String()))
+
+	if err := server.Shutdown(context.Background()); err != nil {
+		log.Error("Failed to stop server", slog.Any("error", err))
+	}
+
+	storage.Close(log)
+
+	log.Info("Server stopped")
 }
