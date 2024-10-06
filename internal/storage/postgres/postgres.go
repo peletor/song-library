@@ -41,5 +41,10 @@ func New(cfg *config.Config, logger *slog.Logger) (*Storage, error) {
 
 	pgStorage := &Storage{db: db}
 
+	if err = pgStorage.makeMigrations(logger); err != nil {
+		log.Error("Unable to make migrations", slog.Any("error", err))
+		return nil, err
+	}
+
 	return pgStorage, nil
 }
