@@ -11,6 +11,7 @@ import (
 	"song-library/internal/config"
 	songinfo "song-library/internal/http-server/handlers/info/get"
 	songsave "song-library/internal/http-server/handlers/songs/save"
+	songupdate "song-library/internal/http-server/handlers/songs/update"
 	"song-library/internal/http-server/mwlogger"
 	"song-library/internal/logger"
 	"song-library/internal/storage/postgres"
@@ -52,6 +53,7 @@ func main() {
 	// Paths
 	router.Get("/info", songinfo.New(log, storage))
 	router.Post("/songs", songsave.New(log, storage))
+	router.Put("/songs", songupdate.New(log, storage))
 
 	// Channel to graceful shutdown
 	stop := make(chan os.Signal, 1)

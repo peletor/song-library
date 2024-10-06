@@ -166,3 +166,35 @@ func (s *Storage) SongInfo(groupName string, songName string) (songDetail models
 			Link:        link},
 		nil
 }
+
+func (s *Storage) SongUpdate(groupName string, songName string, songDetail models.SongDetail) error {
+	const op = "storage.postgres.SongUpdate"
+
+	releaseDate, err := time.Parse("02.01.2006", songDetail.ReleaseDate)
+
+	textSlice := strings.Split(songDetail.Text, "\n")
+
+	sqlStr := ` 
+			UPDATE songs
+			SET release_date = ($1), 
+    			text = ($2),
+    			link = ($3)
+			FROM groups
+			WHERE songs.group_id = groups.id
+  				AND songs.name = ($4)
+  				AND groups.name = ($5)`
+
+	result, err := s.db.Exec(sqlStr,
+		releaseDate, pq.Array(textSlice), songDetail.Link,
+		songName, groupName)
+	if err != nil {
+		return fmt.Errorf("%s: failed to update song: %w", op, err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return storage.ErrSongNotFound
+	}
+
+	return nil
+}
