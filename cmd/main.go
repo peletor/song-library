@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"song-library/internal/config"
+	songinfo "song-library/internal/http-server/handlers/info/get"
 	songsave "song-library/internal/http-server/handlers/songs/save"
 	"song-library/internal/http-server/mwlogger"
 	"song-library/internal/logger"
@@ -49,6 +50,7 @@ func main() {
 	router.Use(middleware.URLFormat)
 
 	// Paths
+	router.Get("/info", songinfo.New(log, storage))
 	router.Post("/songs", songsave.New(log, storage))
 
 	// Channel to graceful shutdown

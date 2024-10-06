@@ -53,3 +53,26 @@ func TestSongSave(t *testing.T) {
 		})
 	}
 }
+
+func TestSongInfo_HappyPath(t *testing.T) {
+	e := httpExpect(t)
+
+	group := gofakeit.AppAuthor()
+	song := gofakeit.BookTitle()
+
+	e.POST("/songs").
+		WithJSON(models.Song{
+			Group: group,
+			Song:  song,
+		}).
+		Expect().Status(201)
+
+	e.GET("/info").
+		WithQuery("group", group).
+		WithQuery("song", song).
+		Expect().Status(200).
+		JSON().Object().
+		ContainsKey("releaseDate").
+		ContainsKey("text").
+		ContainsKey("link")
+}

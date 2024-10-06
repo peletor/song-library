@@ -4,10 +4,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"log/slog"
 	"song-library/internal/config"
+	"song-library/internal/models"
 	"song-library/internal/storage"
+	"strings"
+	"time"
 )
 
 type Storage struct {
@@ -122,4 +126,43 @@ func (s *Storage) getGroupID(groupName string) (groupID int, err error) {
 	}
 
 	return groupID, nil
+}
+
+func (s *Storage) SongInfo(groupName string, songName string) (songDetail models.SongDetail, err error) {
+	const op = "storage.postgres.SongDetail"
+
+	var releaseDate time.Time
+	var link string
+	textSlice := make([]string, 0)
+
+	sqlStr := ` 
+			SELECT s.release_date,
+			       s.text,
+			       s.link
+			FROM songs s
+			JOIN groups g ON s.group_id = s.group_id
+			WHERE g.name = ($1) AND s.name = ($2)`
+
+	err = s.db.QueryRow(sqlStr, groupName, songName).
+		Scan(&releaseDate, pq.Array(&textSlice), &link)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.SongDetail{}, storage.ErrSongNotFound
+		}
+
+		return models.SongDetail{}, fmt.Errorf("%s: failed to update song: %w", op, err)
+	}
+
+	releaseDateStr := ""
+	if !releaseDate.IsZero() {
+		releaseDateStr = releaseDate.Format("02.01.2006")
+	}
+
+	textStr := strings.Join(textSlice, "\n")
+
+	return models.SongDetail{
+			ReleaseDate: releaseDateStr,
+			Text:        textStr,
+			Link:        link},
+		nil
 }
