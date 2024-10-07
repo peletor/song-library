@@ -92,6 +92,8 @@ paths:
       responses:
         '201':
           description: Song added successfully
+        '208':
+          description: Song already exist
         '400':
           description: Bad request
         '500':

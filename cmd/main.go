@@ -56,7 +56,7 @@ func main() {
 	// Paths
 	router.Get("/info", songinfo.New(log, storage))
 	router.Get("/songs", songsget.New(log, storage))
-	router.Post("/songs", songsave.New(log, storage))
+	router.Post("/songs", songsave.New(log, storage, cfg.Address))
 	router.Put("/songs", songupdate.New(log, storage))
 	router.Delete("/songs", songdelete.New(log, storage))
 	router.Get("/songs/text", songtext.New(log, cfg.Address))

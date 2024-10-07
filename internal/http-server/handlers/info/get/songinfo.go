@@ -18,7 +18,7 @@ type SongInformer interface {
 
 func New(log *slog.Logger, songInformer SongInformer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.info.get.songDetail"
+		const op = "handlers.info.get"
 
 		log = log.With(
 			slog.String("op", op),
@@ -93,6 +93,7 @@ func GetInfoSongDetail(cfgHost string, groupName string, songName string) (songD
 			return songDetail, err
 		}
 
+		// Song found
 		return songDetail, nil
 
 	} else if resp.StatusCode == http.StatusNoContent {

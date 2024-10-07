@@ -6,15 +6,15 @@ import (
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
+	songinfo "song-library/internal/http-server/handlers/info/get"
 	"song-library/internal/models"
-	"song-library/internal/storage"
 )
 
 type SongSaver interface {
 	SaveSong(groupName string, songName string) (songId int, err error)
 }
 
-func New(log *slog.Logger, songSaver SongSaver) http.HandlerFunc {
+func New(log *slog.Logger, songSaver SongSaver, cfgHost string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.songs.save"
 
@@ -46,17 +46,36 @@ func New(log *slog.Logger, songSaver SongSaver) http.HandlerFunc {
 			return
 		}
 
+		_, err = songinfo.GetInfoSongDetail(cfgHost, req.GroupName, req.SongName)
+
+		if err == nil {
+			log.Info("Song already exists",
+				slog.String("group", req.GroupName),
+				slog.String("song", req.SongName))
+
+			w.WriteHeader(http.StatusAlreadyReported)
+
+			return
+
+		}
+
+		if !errors.Is(err, songinfo.ErrSongNotFound) {
+			log.Error("Failed GET /info",
+				slog.String("group", req.GroupName),
+				slog.String("song", req.SongName),
+				slog.Any("error", err))
+
+			w.WriteHeader(http.StatusInternalServerError)
+
+			return
+		}
+
+		log.Debug("Start to save new song",
+			slog.String("group", req.GroupName),
+			slog.String("song", req.SongName))
+
 		songId, err := songSaver.SaveSong(req.GroupName, req.SongName)
 		if err != nil {
-			if errors.Is(err, storage.ErrSongExists) {
-				log.Info("SongName already exists",
-					slog.String("song", req.SongName),
-					slog.String("group", req.GroupName))
-
-				w.WriteHeader(http.StatusAlreadyReported)
-
-				return
-			}
 
 			log.Error("Failed to save song", slog.Any("error", err))
 
@@ -65,7 +84,7 @@ func New(log *slog.Logger, songSaver SongSaver) http.HandlerFunc {
 			return
 		}
 
-		log.Info("SongName successfully saved",
+		log.Info("Song successfully saved",
 			slog.String("group", req.GroupName),
 			slog.String("song", req.SongName),
 			slog.Int("song_id", songId),

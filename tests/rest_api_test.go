@@ -11,12 +11,24 @@ import (
 func TestSongSave_HappyPath(t *testing.T) {
 	e := httpExpect(t)
 
+	group := gofakeit.AppAuthor() + " " + gofakeit.Animal()
+	song := gofakeit.BookTitle() + " " + gofakeit.Animal()
+
 	e.POST("/songs").
 		WithJSON(models.Song{
-			GroupName: gofakeit.AppAuthor(),
-			SongName:  gofakeit.BookTitle(),
+			GroupName: group,
+			SongName:  song,
 		}).
 		Expect().Status(201)
+
+	// Song already exists
+
+	e.POST("/songs").
+		WithJSON(models.Song{
+			GroupName: group,
+			SongName:  song,
+		}).
+		Expect().Status(208)
 }
 
 func TestSongSave(t *testing.T) {
