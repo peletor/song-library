@@ -1,0 +1,36 @@
+# Correct request
+# curl -X 'GET'
+#  'http://localhost:8080/info?group=Muse&songs=Supermassive%20Black%20Hole'
+#  -H 'accept: application/json'
+GET http://localhost:8080/info?
+    group=Muse&
+    song=Supermassive%20Black%20Hole
+accept: application/json
+
+###
+
+# Request with not exist song
+# curl -X 'GET'
+#  'http://localhost:8080/info?group=Wrong%20Group&song=Wrong%20Song'
+#  -H 'accept: application/json'
+GET http://localhost:8080/info?
+    group=Wrong%20Group&
+    song=Wrong%20Song
+accept: application/json
+
+###
+
+# Bad request
+GET http://localhost:8080/info?
+    group=Wrong%20Group
+accept: application/json
+###
+
+# curl -X 'GET'
+#  'http://localhost:8080/info?group=Enya&songs=Only%20time'
+#  -H 'accept: application/json'
+GET http://localhost:8080/info?
+    group=Enya&
+    song=Only%20time
+accept: application/json
+
