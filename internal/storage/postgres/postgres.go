@@ -7,6 +7,8 @@ import (
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"log/slog"
+	"net"
+	"net/url"
 	"song-library/internal/config"
 	"song-library/internal/models"
 	"song-library/internal/storage"
@@ -29,10 +31,18 @@ func New(cfg *config.Config, logger *slog.Logger) (*Storage, error) {
 
 	log.Debug("Connecting to postgres database")
 
-	pgConnectString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		cfg.PgUser, cfg.PgPass, cfg.PgHost, cfg.PgPort, cfg.PgDatabase)
+	queryParameters := url.Values{}
+	queryParameters.Add("sslmode", "disable")
 
-	db, err := sql.Open("postgres", pgConnectString)
+	postgresURL := url.URL{
+		Scheme:   "postgres",
+		Host:     net.JoinHostPort(cfg.PgHost, cfg.PgPort),
+		User:     url.UserPassword(cfg.PgUser, cfg.PgPass),
+		Path:     cfg.PgDatabase,
+		RawQuery: queryParameters.Encode(),
+	}
+
+	db, err := sql.Open("postgres", postgresURL.String())
 	if err != nil {
 		log.Error("Unable to open database", slog.Any("error", err))
 		return nil, err
@@ -293,7 +303,6 @@ func (s *Storage) SongsGet(filter models.SongWithDetail, page int, limit int) (s
 		song.SongDetail.Text = strings.Join(textSlice, "\n")
 
 		songs = append(songs, song)
-
 	}
 
 	return songs, nil

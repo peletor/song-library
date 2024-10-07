@@ -4,6 +4,7 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 	"net/http"
 	"song-library/internal/models"
+	"strings"
 	"testing"
 )
 
@@ -170,4 +171,59 @@ func TestSongsGet_HappyPath(t *testing.T) {
 		HasValue("page", page).
 		HasValue("limit", limit).
 		HasValue("items", 1)
+}
+
+func TestSongTextGet_HappyPath(t *testing.T) {
+	e := httpExpect(t)
+
+	group := gofakeit.AppAuthor() + " " + gofakeit.Animal()
+	song := gofakeit.BookTitle() + " " + gofakeit.Animal()
+
+	e.POST("/songs").
+		WithJSON(models.Song{
+			GroupName: group,
+			SongName:  song,
+		}).
+		Expect().Status(201)
+
+	testCount := 10
+
+	pages := make([]string, 0, testCount)
+
+	for page := 1; page <= testCount; page++ {
+		pageText := gofakeit.Paragraph(4, 1, 6, "\n")
+		pages = append(pages, pageText)
+	}
+
+	delimiter := "\n\n"
+	songText := strings.Join(pages, delimiter)
+
+	var songObject models.SongWithDetail
+	songObject.GroupName = group
+	songObject.SongName = song
+	songObject.SongDetail = models.SongDetail{Text: songText}
+
+	e.PUT("/songs").
+		WithJSON(songObject).
+		Expect().Status(200)
+
+	for page := 1; page <= testCount; page++ {
+
+		e.GET("/songs/text").
+			WithQuery("group", group).
+			WithQuery("song", song).
+			WithQuery("page", page).
+			Expect().Status(200).
+			JSON().Object().
+			HasValue("group", group).
+			HasValue("song", song).
+			HasValue("page", page).
+			HasValue("text", pages[page-1])
+	}
+
+	e.GET("/songs/text").
+		WithQuery("group", group).
+		WithQuery("song", song).
+		WithQuery("page", testCount+1).
+		Expect().Status(204)
 }

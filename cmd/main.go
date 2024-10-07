@@ -13,6 +13,7 @@ import (
 	songdelete "song-library/internal/http-server/handlers/songs/delete"
 	songsget "song-library/internal/http-server/handlers/songs/get"
 	songsave "song-library/internal/http-server/handlers/songs/save"
+	songtext "song-library/internal/http-server/handlers/songs/text"
 	songupdate "song-library/internal/http-server/handlers/songs/update"
 	"song-library/internal/http-server/mwlogger"
 	"song-library/internal/logger"
@@ -58,6 +59,7 @@ func main() {
 	router.Post("/songs", songsave.New(log, storage))
 	router.Put("/songs", songupdate.New(log, storage))
 	router.Delete("/songs", songdelete.New(log, storage))
+	router.Get("/songs/text", songtext.New(log, cfg.Address))
 
 	// Channel to graceful shutdown
 	stop := make(chan os.Signal, 1)

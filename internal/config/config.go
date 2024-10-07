@@ -10,8 +10,8 @@ import (
 type Config struct {
 	// Environment: local, dev, test, prod
 	Environment string `env:"ENVIRONMENT" envDefault:"local"`
-	// REST API server
-	Address     string        `env:"ADDRESS" envDefault:"localhost:8080"`
+	// REST API server example.com:8080
+	Address     string        `env:"ADDRESS" envDefault:"localhost:8080"` // example.com:8080
 	Timeout     time.Duration `env:"TIMEOUT" envDefault:"5s"`
 	IdleTimeout time.Duration `env:"IDLE_TIMEOUT" envDefault:"60s"`
 	// Postgres connection

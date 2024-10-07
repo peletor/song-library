@@ -154,38 +154,47 @@ paths:
       summary: Get lyrics of a specific songs with pagination
       parameters:
         - name: group
-          in: path
+          in: query
           required: true
           schema:
             type: string
           description: Group of the songs
         - name: song
-          in: path
+          in: query
           required: true
           schema:
             type: string
           description: Title of the songs
-        - in: query
-          name: page
+        - name: page
+          in: query
+          required: true
           schema:
             type: integer
           description: Page number for lyrics pagination
-        - in: query
-          name: limit
-          schema:
-            type: integer
-          description: Number of lines per page
       responses:
         '200':
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SongDetail'
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: The name of the song
+                  group:
+                    type: string
+                    description: The group of the song
+                  text:
+                    type: string
+                    description: The verse of the song
+                  page:
+                    type: integer
+                    description: Verse number of the song
+        '204':
+          description: No data found
         '400':
           description: Bad request
-        '404':
-          description: Song not found
         '500':
           description: Internal server error
   /info:
@@ -208,6 +217,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SongDetail'
+        '204':
+          description: No data found
         '400':
           description: Bad request
         '500':
