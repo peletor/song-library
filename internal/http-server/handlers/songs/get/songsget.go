@@ -34,6 +34,7 @@ func New(log *slog.Logger, songsGetter SongsGetter) http.HandlerFunc {
 		groupName := r.URL.Query().Get("group")
 		songName := r.URL.Query().Get("song")
 		releaseDate := r.URL.Query().Get("date")
+		link := r.URL.Query().Get("link")
 		page := r.URL.Query().Get("page")
 		limit := r.URL.Query().Get("limit")
 
@@ -41,6 +42,7 @@ func New(log *slog.Logger, songsGetter SongsGetter) http.HandlerFunc {
 			slog.String("group", groupName),
 			slog.String("song", songName),
 			slog.String("releaseDate", releaseDate),
+			slog.String("link", link),
 			slog.String("page", page),
 			slog.String("limit", limit))
 
@@ -67,6 +69,7 @@ func New(log *slog.Logger, songsGetter SongsGetter) http.HandlerFunc {
 		filter.GroupName = groupName
 		filter.SongName = songName
 		filter.SongDetail.ReleaseDate = releaseDate
+		filter.SongDetail.Link = link
 
 		songs, err := songsGetter.SongsGet(filter, pageNumber, intLimit)
 		if err != nil {

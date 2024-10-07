@@ -11,7 +11,6 @@ import (
 	"song-library/internal/config"
 	"song-library/internal/models"
 	"song-library/internal/storage"
-	"strings"
 	"time"
 )
 
@@ -259,6 +258,11 @@ func (s *Storage) SongsGet(filter models.SongWithDetail, page int, limit int) (s
 		sqlStr += fmt.Sprintf("AND s.name = ($%d) ", len(arguments))
 	}
 
+	if filter.SongDetail.Link != "" {
+		arguments = append(arguments, filter.SongDetail.Link)
+		sqlStr += fmt.Sprintf("AND s.link = ($%d) ", len(arguments))
+	}
+
 	releaseDate, err := time.Parse("02.01.2006", filter.SongDetail.ReleaseDate)
 	if err == nil && !releaseDate.IsZero() {
 		arguments = append(arguments, releaseDate)
@@ -285,7 +289,6 @@ func (s *Storage) SongsGet(filter models.SongWithDetail, page int, limit int) (s
 	for rows.Next() {
 		var song models.SongWithDetail
 		var relDate time.Time
-		textSlice := make([]string, 0)
 
 		err = rows.Scan(
 			&song.GroupName,
@@ -298,7 +301,6 @@ func (s *Storage) SongsGet(filter models.SongWithDetail, page int, limit int) (s
 		}
 
 		song.SongDetail.ReleaseDate = dateToString(relDate)
-		song.SongDetail.Text = strings.Join(textSlice, "\n")
 
 		songs = append(songs, song)
 	}
