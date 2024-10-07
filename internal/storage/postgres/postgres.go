@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"log/slog"
 	"net"
@@ -142,8 +141,7 @@ func (s *Storage) SongInfo(groupName string, songName string) (songDetail models
 	const op = "storage.postgres.SongDetail"
 
 	var releaseDate time.Time
-	var link string
-	textSlice := make([]string, 0)
+	var text, link string
 
 	sqlStr := ` 
 			SELECT s.release_date,
@@ -154,7 +152,7 @@ func (s *Storage) SongInfo(groupName string, songName string) (songDetail models
 			WHERE g.name = ($1) AND s.name = ($2)`
 
 	err = s.db.QueryRow(sqlStr, groupName, songName).
-		Scan(&releaseDate, pq.Array(&textSlice), &link)
+		Scan(&releaseDate, &text, &link)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.SongDetail{}, storage.ErrSongNotFound
@@ -165,7 +163,7 @@ func (s *Storage) SongInfo(groupName string, songName string) (songDetail models
 
 	return models.SongDetail{
 			ReleaseDate: dateToString(releaseDate),
-			Text:        strings.Join(textSlice, "\n"),
+			Text:        text,
 			Link:        link},
 		nil
 }
@@ -174,8 +172,6 @@ func (s *Storage) SongUpdate(groupName string, songName string, songDetail model
 	const op = "storage.postgres.SongUpdate"
 
 	releaseDate, err := time.Parse("02.01.2006", songDetail.ReleaseDate)
-
-	textSlice := strings.Split(songDetail.Text, "\n")
 
 	sqlStr := ` 
 			UPDATE songs
@@ -188,7 +184,7 @@ func (s *Storage) SongUpdate(groupName string, songName string, songDetail model
   				AND groups.name = ($5)`
 
 	result, err := s.db.Exec(sqlStr,
-		releaseDate, pq.Array(textSlice), songDetail.Link,
+		releaseDate, songDetail.Text, songDetail.Link,
 		songName, groupName)
 	if err != nil {
 		return fmt.Errorf("%s: failed to update song: %w", op, err)
@@ -282,7 +278,9 @@ func (s *Storage) SongsGet(filter models.SongWithDetail, page int, limit int) (s
 		return nil, fmt.Errorf("%s: failed to query songs: %w", op, err)
 	}
 
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	for rows.Next() {
 		var song models.SongWithDetail
@@ -293,7 +291,7 @@ func (s *Storage) SongsGet(filter models.SongWithDetail, page int, limit int) (s
 			&song.GroupName,
 			&song.SongName,
 			&relDate,
-			pq.Array(&textSlice),
+			&song.SongDetail.Text,
 			&song.SongDetail.Link)
 		if err != nil {
 			return nil, fmt.Errorf("%s: failed to query songs: %w", op, err)

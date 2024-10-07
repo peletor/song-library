@@ -12,10 +12,12 @@ CREATE TABLE IF NOT EXISTS songs (
                                     group_id INT REFERENCES groups(id),
                                     name TEXT NOT NULL,
                                     release_date DATE NOT NULL DEFAULT '0001-01-01'::DATE,
-                                    text TEXT[] NOT NULL DEFAULT '{}'::text[],
+                                    text TEXT DEFAULT '',
                                     link TEXT DEFAULT ''
 );
 
 CREATE INDEX IF NOT EXISTS idx_song_name ON songs (name);
 
 CREATE INDEX IF NOT EXISTS idx_release_date ON songs (release_date);
+
+CREATE INDEX IF NOT EXISTS idx_song_link ON songs (link);
