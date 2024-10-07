@@ -10,3 +10,8 @@ type SongDetail struct {
 	Text        string `json:"text" validate:"required"`
 	Link        string `json:"link" validate:"required"`
 }
+
+type SongWithDetail struct {
+	Song
+	SongDetail SongDetail `json:"songDetail" validate:"required"`
+}

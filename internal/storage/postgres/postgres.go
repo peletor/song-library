@@ -153,16 +153,9 @@ func (s *Storage) SongInfo(groupName string, songName string) (songDetail models
 		return models.SongDetail{}, fmt.Errorf("%s: failed to update song: %w", op, err)
 	}
 
-	releaseDateStr := ""
-	if !releaseDate.IsZero() {
-		releaseDateStr = releaseDate.Format("02.01.2006")
-	}
-
-	textStr := strings.Join(textSlice, "\n")
-
 	return models.SongDetail{
-			ReleaseDate: releaseDateStr,
-			Text:        textStr,
+			ReleaseDate: dateToString(releaseDate),
+			Text:        strings.Join(textSlice, "\n"),
 			Link:        link},
 		nil
 }
@@ -199,8 +192,8 @@ func (s *Storage) SongUpdate(groupName string, songName string, songDetail model
 	return nil
 }
 
-func (s *Storage) DeleteSong(groupName string, songName string) (songID int, err error) {
-	const op = "storage.postgres.DeleteSong"
+func (s *Storage) SongDelete(groupName string, songName string) (songID int, err error) {
+	const op = "storage.postgres.SongDelete"
 
 	sqlStr := `
   			DELETE FROM songs
@@ -232,4 +225,83 @@ func (s *Storage) DeleteSong(groupName string, songName string) (songID int, err
 	_, _ = s.db.Exec(sqlStr, groupName)
 
 	return songID, nil
+}
+
+func (s *Storage) SongsGet(filter models.SongWithDetail, page int, limit int) (songs []models.SongWithDetail, err error) {
+	const op = "storage.postgres.SongGet"
+
+	sqlStr := ` 
+			SELECT	g.name,
+			    	s.name,
+			    	s.release_date,
+			       	s.text,
+			       	s.link
+			FROM songs s
+			JOIN groups g ON s.group_id = g.id
+			WHERE true
+				`
+
+	arguments := make([]interface{}, 0)
+
+	if filter.GroupName != "" {
+		arguments = append(arguments, filter.GroupName)
+		sqlStr += fmt.Sprintf("AND g.name = ($%d) ", len(arguments))
+	}
+
+	if filter.SongName != "" {
+		arguments = append(arguments, filter.SongName)
+		sqlStr += fmt.Sprintf("AND s.name = ($%d) ", len(arguments))
+	}
+
+	releaseDate, err := time.Parse("02.01.2006", filter.SongDetail.ReleaseDate)
+	if err == nil && !releaseDate.IsZero() {
+		arguments = append(arguments, releaseDate)
+		sqlStr += fmt.Sprintf("AND s.release_date = ($%d) ", len(arguments))
+	}
+
+	offset := (page - 1) * limit
+	arguments = append(arguments, offset)
+	sqlStr += fmt.Sprintf(`
+			OFFSET ($%d) `, len(arguments))
+
+	arguments = append(arguments, limit)
+	sqlStr += fmt.Sprintf("LIMIT ($%d) ", len(arguments))
+
+	rows, err := s.db.Query(sqlStr, arguments...)
+	if err != nil {
+		return nil, fmt.Errorf("%s: failed to query songs: %w", op, err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var song models.SongWithDetail
+		var relDate time.Time
+		textSlice := make([]string, 0)
+
+		err = rows.Scan(
+			&song.GroupName,
+			&song.SongName,
+			&relDate,
+			pq.Array(&textSlice),
+			&song.SongDetail.Link)
+		if err != nil {
+			return nil, fmt.Errorf("%s: failed to query songs: %w", op, err)
+		}
+
+		song.SongDetail.ReleaseDate = dateToString(relDate)
+		song.SongDetail.Text = strings.Join(textSlice, "\n")
+
+		songs = append(songs, song)
+
+	}
+
+	return songs, nil
+}
+
+func dateToString(date time.Time) (dateString string) {
+	if !date.IsZero() {
+		dateString = date.Format("02.01.2006")
+	}
+	return dateString
 }

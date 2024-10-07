@@ -10,11 +10,6 @@ import (
 	"song-library/internal/storage"
 )
 
-type Request struct {
-	models.Song
-	SongDetail models.SongDetail `json:"songDetail" validate:"required"`
-}
-
 type SongUpdater interface {
 	SongUpdate(groupName string, songName string, songDetail models.SongDetail) error
 }
@@ -28,7 +23,7 @@ func New(log *slog.Logger, songUpdater SongUpdater) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		var req Request
+		var req models.SongWithDetail
 
 		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {

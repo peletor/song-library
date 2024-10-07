@@ -41,6 +41,35 @@ paths:
       responses:
         '200':
           description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  songs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: The name of the song
+                        group:
+                          type: string
+                          description: The group of the song
+                        songDetail:
+                          $ref: '#/components/schemas/SongDetail'
+                  page:
+                    type: integer
+                    description: Page number for pagination
+                  limit:
+                    type: integer
+                    description: Number of items per page
+                  items:
+                    type: integer
+                    description: Number of returned items
+        '204':
+          description: No data. Songs not found
         '400':
           description: Bad request
         '500':

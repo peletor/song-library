@@ -11,7 +11,7 @@ import (
 )
 
 type SongDeleter interface {
-	DeleteSong(groupName string, songName string) (songId int, err error)
+	SongDelete(groupName string, songName string) (songId int, err error)
 }
 
 func New(log *slog.Logger, songDeleter SongDeleter) http.HandlerFunc {
@@ -46,7 +46,7 @@ func New(log *slog.Logger, songDeleter SongDeleter) http.HandlerFunc {
 			return
 		}
 
-		songId, err := songDeleter.DeleteSong(req.GroupName, req.SongName)
+		songId, err := songDeleter.SongDelete(req.GroupName, req.SongName)
 		if err != nil {
 			if errors.Is(err, storage.ErrSongNotFound) {
 				log.Info("SongName not found",

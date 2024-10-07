@@ -17,3 +17,5 @@ CREATE TABLE IF NOT EXISTS songs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_song_name ON songs (name);
+
+CREATE INDEX IF NOT EXISTS idx_release_date ON songs (release_date);

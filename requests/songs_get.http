@@ -1,0 +1,53 @@
+# curl -X 'GET'
+#  'http://localhost:8080/songs?page=1&limit=10'
+#  -H 'accept: */*'
+
+# Without filters
+GET http://localhost:8080/songs?
+    page=1&limit=5
+accept: */*
+
+###
+
+# With group filter
+GET http://localhost:8080/songs?
+    group=Muse&
+    page=1&limit=10
+accept: */*
+
+###
+
+# With song filter
+GET http://localhost:8080/songs?
+    song=Supermassive%20Black%20Hole&
+    page=1&limit=10
+accept: */*
+
+###
+
+# With group and song filter
+GET http://localhost:8080/songs?
+    group=Muse&
+    song=Supermassive%20Black%20Hole&
+    page=1&limit=10
+accept: */*
+
+###
+
+# With date filter
+GET http://localhost:8080/songs?
+    date=16.07.2006&
+    page=1&limit=10
+accept: */*
+
+###
+
+# With group, song and date filter
+GET http://localhost:8080/songs?
+    group=Muse&
+    song=Supermassive%20Black%20Hole&
+    date=16.07.2006&
+    page=1&limit=10
+accept: */*
+
+###

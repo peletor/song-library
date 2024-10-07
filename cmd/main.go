@@ -11,6 +11,7 @@ import (
 	"song-library/internal/config"
 	songinfo "song-library/internal/http-server/handlers/info/get"
 	songdelete "song-library/internal/http-server/handlers/songs/delete"
+	songsget "song-library/internal/http-server/handlers/songs/get"
 	songsave "song-library/internal/http-server/handlers/songs/save"
 	songupdate "song-library/internal/http-server/handlers/songs/update"
 	"song-library/internal/http-server/mwlogger"
@@ -53,6 +54,7 @@ func main() {
 
 	// Paths
 	router.Get("/info", songinfo.New(log, storage))
+	router.Get("/songs", songsget.New(log, storage))
 	router.Post("/songs", songsave.New(log, storage))
 	router.Put("/songs", songupdate.New(log, storage))
 	router.Delete("/songs", songdelete.New(log, storage))

@@ -111,3 +111,63 @@ func TestSongDelete_NotFound(t *testing.T) {
 		}).
 		Expect().Status(204)
 }
+
+func TestSongsGet_HappyPath(t *testing.T) {
+	e := httpExpect(t)
+
+	group := gofakeit.AppAuthor() + " " + gofakeit.Animal()
+	song := gofakeit.BookTitle() + " " + gofakeit.Animal()
+
+	page := 1
+	limit := 3
+
+	e.POST("/songs").
+		WithJSON(models.Song{
+			GroupName: group,
+			SongName:  song,
+		}).
+		Expect().Status(201)
+
+	var songObject models.SongWithDetail
+	songObject.GroupName = group
+	songObject.SongName = song
+
+	songs := []models.SongWithDetail{songObject}
+
+	// Filter by song name and group name
+	e.GET("/songs").
+		WithQuery("page", page).
+		WithQuery("limit", limit).
+		WithQuery("group", group).
+		WithQuery("song", song).
+		Expect().Status(200).
+		JSON().Object().
+		HasValue("songs", songs).
+		HasValue("page", page).
+		HasValue("limit", limit).
+		HasValue("items", 1)
+
+	// Filter only by song name
+	e.GET("/songs").
+		WithQuery("page", page).
+		WithQuery("limit", limit).
+		WithQuery("song", song).
+		Expect().Status(200).
+		JSON().Object().
+		HasValue("songs", songs).
+		HasValue("page", page).
+		HasValue("limit", limit).
+		HasValue("items", 1)
+
+	// Filter only by group name
+	e.GET("/songs").
+		WithQuery("page", page).
+		WithQuery("limit", limit).
+		WithQuery("group", group).
+		Expect().Status(200).
+		JSON().Object().
+		HasValue("songs", songs).
+		HasValue("page", page).
+		HasValue("limit", limit).
+		HasValue("items", 1)
+}
