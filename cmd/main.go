@@ -16,7 +16,7 @@ import (
 	songtext "song-library/internal/http-server/handlers/songs/text"
 	songupdate "song-library/internal/http-server/handlers/songs/update"
 	"song-library/internal/http-server/mwlogger"
-	"song-library/internal/logger"
+	"song-library/internal/logger/slogger"
 	"song-library/internal/storage/postgres"
 	"syscall"
 )

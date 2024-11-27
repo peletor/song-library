@@ -12,6 +12,7 @@ import (
 	"song-library/internal/storage"
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.43.2 --name=SongInformer
 type SongInformer interface {
 	SongInfo(groupName string, songName string) (models.SongDetail, error)
 }
