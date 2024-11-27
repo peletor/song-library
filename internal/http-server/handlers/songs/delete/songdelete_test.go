@@ -1,19 +1,20 @@
-package songinfo
+package songdelete
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"song-library/internal/http-server/handlers/info/get/mocks"
+	"song-library/internal/http-server/handlers/songs/delete/mocks"
 	"song-library/internal/logger/slogdiscard"
 	"song-library/internal/models"
 	"song-library/internal/storage"
 	"testing"
 )
 
-func TestSongInfoHandler(t *testing.T) {
+func TestSongDeleteHandler(t *testing.T) {
 	cases := []struct {
 		name       string
 		groupName  string
@@ -71,22 +72,21 @@ func TestSongInfoHandler(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			songInformerMock := mocks.NewSongInformer(t)
+			songDeleterMock := mocks.NewSongDeleter(t)
 
-			songInformerMock.On("SongInfo", tc.groupName, tc.songName).
-				Return(models.SongDetail{}, tc.mockError).Maybe()
+			songDeleterMock.On("SongDelete", tc.groupName, tc.songName).
+				Return(0, tc.mockError).Maybe()
 
-			handler := New(slogdiscard.NewDiscardLogger(), songInformerMock)
+			handler := New(slogdiscard.NewDiscardLogger(), songDeleterMock)
 
-			queryParameters := url.Values{}
-			queryParameters.Add("group", tc.groupName)
-			queryParameters.Add("song", tc.songName)
+			song := models.Song{GroupName: tc.groupName, SongName: tc.songName}
 
-			songURL := url.URL{Path: "/songs",
-				RawQuery: queryParameters.Encode()}
-			urlString := songURL.String()
+			// make io.Reader from struct models.Song{}
+			var buf bytes.Buffer
+			err := json.NewEncoder(&buf).Encode(song)
+			require.NoError(t, err)
 
-			req, err := http.NewRequest(http.MethodGet, urlString, nil)
+			req, err := http.NewRequest(http.MethodDelete, "/songs", &buf)
 			require.NoError(t, err)
 
 			rr := httptest.NewRecorder()
